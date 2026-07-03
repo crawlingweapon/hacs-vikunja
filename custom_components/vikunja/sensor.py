@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     DOMAIN,
     CONF_URL,
-    CONF_API_TOKEN,
+    CONF_VK_AT,
     CONF_FILTERS,
     DEFAULT_SCAN_INTERVAL,
 )
@@ -31,7 +31,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Vikunja sensors based on a config entry."""
     url = entry.data[CONF_URL].rstrip("/")
-    api_token = entry.data[CONF_API_TOKEN]
     filters = entry.data.get(CONF_FILTERS, [])
 
     coordinator = VikunjaDataCoordinator(hass, url, api_token, filters)
