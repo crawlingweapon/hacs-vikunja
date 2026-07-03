@@ -12,7 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     DOMAIN,
     CONF_URL,
-    CONF_API_TOKEN,
+    CONF_VK_AT,
     CONF_FILTERS,
     CONF_FILTER_ID,
     CONF_FILTER_NAME,
@@ -24,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL, default=DEFAULT_URL): str,
-        vol.Required(CONF_API_TOKEN): str,
     }
 )
 
@@ -60,7 +59,6 @@ async def validate_input(data: dict[str, Any]) -> dict[str, str]:
     """Validate by hitting the Vikunja API info endpoint."""
     session = async_get_clientsession()
     url = data[CONF_URL].rstrip("/")
-    headers = {"Authorization": f"Bearer {data[CONF_API_TOKEN]}"}
 
     try:
         resp = await session.get(f"{url}/api/v1/info", headers=headers, timeout=10)
