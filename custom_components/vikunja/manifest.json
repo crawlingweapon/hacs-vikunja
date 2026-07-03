@@ -1,0 +1,12 @@
+{
+  "domain": "vikunja",
+  "name": "Vikunja Task Manager",
+  "codeowners": ["@crawlingweapon"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/crawlingweapon/vikunja-python",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "requirements": ["vikunja-python>=0.1.1"],
+  "version": "0.1.1"
+}
