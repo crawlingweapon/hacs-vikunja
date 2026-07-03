@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Vikunja",
+        "description": "Enter your Vikunja instance URL and an API token with read permissions.",
+        "data": {
+          "url": "Vikunja URL",
+          "credential_key": "API Token"
+        }
+      },
+      "filters": {
+        "title": "Saved Filters",
+        "description": "Configure which saved filters to monitor. Each row: filter ID (negative number) and display name. Defaults: -2 (Due in 3 Days), -3 (Overdue), -4 (Due Today).",
+        "data": {
+          "filter_id_0": "Filter ID",
+          "filter_name_0": "Filter Name"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot reach Vikunja. Check the URL and ensure the instance is accessible.",
+      "invalid_auth": "Token rejected. Create a new API token in Vikunja Settings > API Tokens.",
+      "no_filters": "Configure at least one saved filter.",
+      "unknown": "Unexpected error. Check the logs for details."
+    },
+    "abort": {
+      "already_configured": "This Vikunja instance is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Manage Saved Filters",
+        "description": "Add, remove, or modify the saved filters tracked by this integration.",
+        "data": {
+          "filter_id_0": "Filter ID",
+          "filter_name_0": "Filter Name"
+        }
+      }
+    }
+  }
+}
