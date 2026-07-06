@@ -6,6 +6,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -56,9 +57,9 @@ def _extract_filters(user_input: dict) -> list[dict]:
     return filters
 
 
-async def validate_input(data: dict[str, Any]) -> dict[str, str]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate URL by hitting the /info endpoint (no auth required)."""
-    session = async_get_clientsession()
+    session = async_get_clientsession(hass)
     url = data[CONF_URL].rstrip("/")
     api_url = url.replace("/api/v1", "").rstrip("/") + "/api/v1"
     data[CONF_URL] = api_url
@@ -94,7 +95,7 @@ class VikunjaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                info = await validate_input(user_input)
+                info = await validate_input(self.hass, user_input)
                 self._auth_data = user_input
                 return await self.async_step_filters()
             except CannotConnect:
