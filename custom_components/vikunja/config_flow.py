@@ -57,23 +57,21 @@ def _extract_filters(user_input: dict) -> list[dict]:
 
 
 async def validate_input(data: dict[str, Any]) -> dict[str, str]:
-    """Validate by hitting the Vikunja API info endpoint."""
+    """Validate URL by hitting the /info endpoint (no auth required)."""
     session = async_get_clientsession()
     url = data[CONF_URL].rstrip("/")
     api_url = url.replace("/api/v1", "").rstrip("/") + "/api/v1"
-    headers = {"Authorization": f"Bearer {data[CONF_VK_AT]}"}
+    data[CONF_URL] = api_url
 
     try:
-        resp = await session.get(f"{api_url}/user", headers=headers, timeout=10)
+        resp = await session.get(f"{api_url}/info", timeout=10)
         if resp.status == 200:
-            data[CONF_URL] = api_url
-            user = await resp.json()
-            return {"title": user.get("username", "Vikunja")}
-        if resp.status == 401:
-            raise ValueError("Invalid API token")
+            info = await resp.json()
+            title = info.get("version", "Vikunja")
+            if isinstance(info.get("frontend_url"), str):
+                title = info.get("frontend_url", title)
+            return {"title": f"Vikunja {info.get('version', '')}".strip()}
         resp.raise_for_status()
-    except ValueError:
-        raise
     except Exception as exc:
         raise CannotConnect from exc
 
@@ -101,8 +99,6 @@ class VikunjaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_filters()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except ValueError:
-                errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
