@@ -17,7 +17,7 @@ Home Assistant custom integration for [Vikunja](https://vikunja.io/) task manage
 
 ## Dependencies
 
-This integration requires [vikunja-python](https://pypi.org/project/vikunja-python/) (>=0.1.1), which is automatically installed by Home Assistant when you add the integration.
+This integration automatically uses HA's async session for non-blocking SSL. It is a self-contained component and does not require any additional pip packages else than what HA ships.
 
 ## Installation
 
@@ -44,11 +44,11 @@ Or manually:
 2. Search for "Vikunja"
 3. Enter your Vikunja URL (e.g., `https://vikunja.example.com`) and an API token
 4. Click Submit
-5. On the next screen, configure which saved filters to track:
-   - Filter ID: negative number matching your saved filter (e.g., -2 for "Due in 3 Days", -3 for "Overdue", -4 for "Due Today")
-   - Filter Name: display name for the sensor
-   - Add or remove filter rows as needed
+5. On the next screen, enter a Project ID (negative number) and a display name for the filter to track:
+   - **Project ID**: The negative project ID of your saved filter (e.g., -3 for Overdue, -4 for Due Today)
+   - **Project Name**: A friendly name for the sensor (e.g., "Overdue")
 6. Click Submit
+7. To add more filters later: **Settings → Devices & Services → Vikunja → Configure**
 
 ### Getting your API Token
 
@@ -96,3 +96,4 @@ Vikunja saved filters are accessed via negative project IDs. Common defaults:
 | -4 | Due Today | Tasks due today |
 
 You can create additional saved filters in the Vikunja UI and reference them by their negative project ID.
+
