@@ -7,6 +7,7 @@ from typing import Any
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -66,13 +67,46 @@ class VikunjaDataCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
 
-    async def _async_update_data(self) -> dict[int, list[dict]]:
-        """Fetch data for all configured filters via the vikunja-python library."""
-        from vikunja_python.core.client import VikunjaClient
+    async def _async_update_data(self) -> dict[str, dict]:
+        """Fetch task counts for each configured filter using HA's async session."""
+        session = async_get_clientsession(self.hass)
+        headers = {"Authorization": f"Bearer {self._api_token}"}
 
-        async with VikunjaClient(self._url, self._api_token) as client:
-            data = await client.get_dashboard_summary()
-            return data["filters"]
+        async def fetch(f: dict) -> tuple[str, dict]:
+            key = str(f["id"])
+            params = {"page": 1, "per_page": 10, "project_id": f["id"]}
+            try:
+                resp = await session.get(
+                    f"{self._url}/tasks",
+                    headers=headers,
+                    params=params,
+                    timeout=10,
+                )
+                if resp.status == 200:
+                    tasks = await resp.json()
+                    if not isinstance(tasks, list):
+                        tasks = []
+                    return key, {
+                        "count": len(tasks),
+                        "tasks": [
+                            {
+                                "id": t.get("id"),
+                                "title": t.get("title"),
+                                "due_date": t.get("due_date"),
+                                "priority": t.get("priority", 0),
+                            }
+                            for t in tasks[:10]
+                        ],
+                    }
+                _LOGGER.warning("Vikunja filter %s returned status %s", f["id"], resp.status)
+                return key, {"count": 0, "tasks": [], "error": resp.status}
+            except Exception as exc:
+                _LOGGER.warning("Vikunja filter %s error: %s", f["id"], exc)
+                return key, {"count": 0, "tasks": [], "error": str(exc)}
+
+        import asyncio
+        results = await asyncio.gather(*[fetch(f) for f in self._filters])
+        return dict(results)
 
 
 class VikunjaTaskSensor(CoordinatorEntity, SensorEntity):
