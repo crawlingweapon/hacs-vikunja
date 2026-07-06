@@ -9,8 +9,6 @@
   "documentation": "https://github.com/crawlingweapon/hacs-vikunja",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "requirements": [
-    "vikunja-python>=0.1.2"
-  ],
-  "version": "0.1.6"
+  "requirements": [],
+  "version": "0.2.0"
 }
