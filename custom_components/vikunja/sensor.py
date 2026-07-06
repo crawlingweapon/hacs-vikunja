@@ -31,6 +31,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Vikunja sensors based on a config entry."""
     url = entry.data[CONF_URL].rstrip("/")
+    api_token = entry.data[CONF_VK_AT]
     filters = entry.data.get(CONF_FILTERS, [])
 
     coordinator = VikunjaDataCoordinator(hass, url, api_token, filters)
