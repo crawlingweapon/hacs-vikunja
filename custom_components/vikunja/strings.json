@@ -6,7 +6,7 @@
         "description": "Enter your Vikunja instance URL and an API token with read permissions.",
         "data": {
           "url": "Vikunja URL",
-          "credential_key": "API Token"
+          "auth_token": "API Token"
         }
       },
       "filters": {
