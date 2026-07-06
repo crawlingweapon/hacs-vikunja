@@ -15,8 +15,8 @@ from .const import (
     CONF_URL,
     CONF_VK_AT,
     CONF_FILTERS,
-    CONF_FILTER_ID,
-    CONF_FILTER_NAME,
+    CONF_PROJECT_ID,
+    CONF_PROJECT_NAME,
     DEFAULT_URL,
 )
 
@@ -30,29 +30,36 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-def _filter_schema(filters: list[dict] | None = None) -> vol.Schema:
-    """Build schema for filter configuration, pre-filled with existing filters."""
-    existing = filters or [{"id": -2, "name": "Due in 3 Days"}, {"id": -3, "name": "Overdue"}, {"id": -4, "name": "Due Today"}]
+def _filter_schema(existing: list[dict] | None = None) -> vol.Schema:
+    """Build schema for filter configuration. Shows current filters for editing."""
+    existing = existing or []
+    # Always offer at least one blank row so users can start fresh
+    rows = existing if existing else [{"id": "", "name": ""}]
     schema = {}
-    for i, f in enumerate(existing):
-        schema[vol.Required(f"{CONF_FILTER_ID}_{i}", default=f["id"])] = int
-        schema[vol.Required(f"{CONF_FILTER_NAME}_{i}", default=f["name"])] = str
-    # Allow adding up to 5 more blank filters
-    for i in range(len(existing), len(existing) + 5):
-        schema[vol.Optional(f"{CONF_FILTER_ID}_{i}", default="")] = str
-        schema[vol.Optional(f"{CONF_FILTER_NAME}_{i}", default="")] = str
+    for i, f in enumerate(rows):
+        default_id = f["id"] if f["id"] != "" else ""
+        default_name = f["name"] if f["name"] != "" else ""
+        schema[vol.Required(f"{CONF_PROJECT_ID}_{i}", default=default_id)] = (
+            vol.All(str, vol.Length(min=0))
+        )
+        schema[vol.Required(f"{CONF_PROJECT_NAME}_{i}", default=default_name)] = (
+            vol.All(str, vol.Length(min=0))
+        )
     return vol.Schema(schema)
 
 
 def _extract_filters(user_input: dict) -> list[dict]:
-    """Extract non-empty filters from the config form data."""
+    """Extract non-empty filters from form data."""
     filters = []
     i = 0
-    while f"{CONF_FILTER_ID}_{i}" in user_input or f"{CONF_FILTER_NAME}_{i}" in user_input:
-        fid = user_input.get(f"{CONF_FILTER_ID}_{i}")
-        fname = user_input.get(f"{CONF_FILTER_NAME}_{i}")
-        if fid and fname:
-            filters.append({"id": int(fid), "name": fname})
+    while f"{CONF_PROJECT_ID}_{i}" in user_input or f"{CONF_PROJECT_NAME}_{i}" in user_input:
+        pid = user_input.get(f"{CONF_PROJECT_ID}_{i}")
+        pname = user_input.get(f"{CONF_PROJECT_NAME}_{i}")
+        if pid and pname:
+            try:
+                filters.append({"id": int(pid), "name": str(pname)})
+            except (ValueError, TypeError):
+                pass
         i += 1
     return filters
 
@@ -68,9 +75,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         resp = await session.get(f"{api_url}/info", timeout=10)
         if resp.status == 200:
             info = await resp.json()
-            title = info.get("version", "Vikunja")
-            if isinstance(info.get("frontend_url"), str):
-                title = info.get("frontend_url", title)
             return {"title": f"Vikunja {info.get('version', '')}".strip()}
         resp.raise_for_status()
     except Exception as exc:
@@ -111,7 +115,7 @@ class VikunjaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_filters(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Step 2: Configure which saved filters to track."""
+        """Step 2: Configure at least one saved filter to track."""
         errors = {}
         if user_input is not None:
             filters = _extract_filters(user_input)
@@ -128,12 +132,10 @@ class VikunjaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data=data,
                 )
 
-        defaults = [{"id": -2, "name": "Due in 3 Days"}, {"id": -3, "name": "Overdue"}, {"id": -4, "name": "Due Today"}]
         return self.async_show_form(
             step_id="filters",
-            data_schema=_filter_schema(defaults),
+            data_schema=_filter_schema(None),
             errors=errors,
-            description_placeholders={"example": "Use negative IDs like -2 for saved filters"},
         )
 
     @staticmethod
@@ -153,7 +155,7 @@ class VikunjaOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Manage filters options."""
+        """Manage filters."""
         errors = {}
         if user_input is not None:
             filters = _extract_filters(user_input)
@@ -165,10 +167,10 @@ class VikunjaOptionsFlow(config_entries.OptionsFlow):
                     data={CONF_FILTERS: filters},
                 )
 
-        current_filters = self._config_entry.data.get(CONF_FILTERS, [])
+        current = self._config_entry.data.get(CONF_FILTERS, [])
         return self.async_show_form(
             step_id="init",
-            data_schema=_filter_schema(current_filters),
+            data_schema=_filter_schema(current),
             errors=errors,
         )
 
