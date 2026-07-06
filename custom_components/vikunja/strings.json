@@ -11,16 +11,15 @@
       },
       "filters": {
         "title": "Saved Filters",
-        "description": "Configure which saved filters to monitor. Each row: filter ID (negative number) and display name. Defaults: -2 (Due in 3 Days), -3 (Overdue), -4 (Due Today).",
+        "description": "Add at least one saved filter to track. Use a negative Project ID (e.g. -3 for Overdue). You can add more later via Options.",
         "data": {
-          "filter_id_0": "Filter ID",
-          "filter_name_0": "Filter Name"
+          "project_id_0": "Project ID",
+          "project_name_0": "Project Name"
         }
       }
     },
     "error": {
       "cannot_connect": "Cannot reach Vikunja. Check the URL and ensure the instance is accessible.",
-      "invalid_auth": "Token rejected. Create a new API token in Vikunja Settings > API Tokens.",
       "no_filters": "Configure at least one saved filter.",
       "unknown": "Unexpected error. Check the logs for details."
     },
@@ -34,8 +33,8 @@
         "title": "Manage Saved Filters",
         "description": "Add, remove, or modify the saved filters tracked by this integration.",
         "data": {
-          "filter_id_0": "Filter ID",
-          "filter_name_0": "Filter Name"
+          "project_id_0": "Project ID",
+          "project_name_0": "Project Name"
         }
       }
     }
